@@ -3,7 +3,8 @@ import psycopg2.extras
 from dotenv import load_dotenv
 import os
 import requests
-from Parser import data
+from Parser import Parser
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -58,26 +59,48 @@ class Executor:
     #     date date,
     #     link varchar
     # )'''
-    # q2 = '''
-    # select * from AllEvents'''
-
-    # Executor.run_commit(q1)
-    # print(Executor.run_fetch(q2))
 
 def insert_into_table(table_name, title, date, link):
     query = f'''
     insert into {table_name}(title, date, link)
-    values
-    ('{title}',
-    '{date}',
-    '{link}')
+    select '{title}', '{date}', '{link}'
+    WHERE NOT EXISTS (SELECT * from AllEvents where title = '{title}' and date = '{date}' and link = '{link}');
     '''
     Executor.run_commit(query)
 
+def update_table(table):
+    for item in table:
+        title = item['title']
+        date = item['date']
+        link = item['link']
+        insert_into_table('AllEvents', title, date, link)
 
-# for item in data:
-#     title = item['title']
-#     date = item['date']
-#     link = item['link']
-#     insert_into_table('AllEvents', title, date, link)
+def show_all():
+    query = '''
+    select * from AllEvents'''
+    return Executor.run_fetch(query)
 
+def get_events_today():
+    data = datetime.now()
+    query = f'''
+    select * from AllEvents where date = '{data}'
+    '''
+    Executor.run_commit(query)
+    return Executor.run_fetch(query)
+
+def get_events_tomorrow():
+    tomorrow = datetime.now()+timedelta(1)
+    query = f'''
+    select * from AllEvents where date = '{tomorrow}'
+    '''
+    Executor.run_commit(query)
+    return Executor.run_fetch(query)
+
+def get_events_week():
+    today = datetime.now()
+    last_day = datetime.now()+timedelta(7)
+    query = f'''
+    select * from AllEvents where date between '{today}' and '{last_day}'
+    '''
+    Executor.run_commit(query)
+    return Executor.run_fetch(query)
