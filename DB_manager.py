@@ -1,10 +1,8 @@
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
-import os
-import requests
-from Parser import Parser
 from datetime import datetime, timedelta
+import os
 
 load_dotenv()
 
@@ -60,7 +58,9 @@ class Executor:
     #     link varchar
     # )'''
 
+
 def insert_into_table(table_name, title, date, link):
+    
     query = f'''
     insert into {table_name}(title, date, link)
     select '{title}', '{date}', '{link}'
@@ -104,3 +104,4 @@ def get_events_week():
     '''
     Executor.run_commit(query)
     return Executor.run_fetch(query)
+
